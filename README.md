@@ -1,5 +1,5 @@
 # demo2026
-Модуль 1 Задание 
+# Модуль 1 Задание 1
 1. **Настройка рабочих машин (HQ-SRV, BR-SRV, HQ-CLI)**
 **Настройка имён HQ-SRV, BR-SRV, HQ-CLI**
 ```bash
@@ -144,115 +144,79 @@ ip route 0.0.0.0 0.0.0.0 172.16.1.1
 ```bash
 ip route 0.0.0.0 0.0.0.0 172.16.2.1
 ```
-**Модуль 1 Задание 2**
-
+# Модуль 1 Задание 2
 1. **Настройка интерфейсов, смотрящих в сторону HQ-RTR и BR-RTR (ens19, ens20)**
 
-**Файл ipv4address в ens19: echo "172.16.1.1/28" > etc/net/ifaces/ens19/ipv4address**
-
-**Файл ipv4address в ens20: echo "172.16.2.1/28" > etc/net/ifaces/ens20/ipv4address**
-
+**Файл ipv4address в ens19: 
+```bash
+echo "172.16.1.1/28" > etc/net/ifaces/ens19/ipv4address**
+```
+**Файл ipv4address в ens20: 
+```bash
+echo "172.16.2.1/28" > etc/net/ifaces/ens20/ipv4address**
+```
 **Файл options в /etc/net/ifaces/ens19 приводим к следующему виду:**
-
+```bash
 echo "BOOTPROTO=static" > /etc/net/ifaces/ens19/options
-
 echo "TYPE=eth" >> /etc/net/ifaces/ens19/options
-
 echo "NM\_CONTROLLED=no" >> /etc/net/ifaces/ens19/options
-
 echo "DISABLED=no" >> /etc/net/ifaces/ens19/options
-
 echo "CONFIG\_WIRELESS=no" >> /etc/net/ifaces/ens19/options
-
 echo "SYSTEMD\_BOOTPROTO=static" >> /etc/net/ifaces/ens19/options
-
 echo "CONFIG\_IPV4=yes" >> /etc/net/ifaces/ens19/options
-
 echo "SYSTEMD\_CONTROLLED=no" >> /etc/net/ifaces/ens19/options
-
+```
 **Файл options в /etc/net/ifaces/ens20 приводим к следующему виду:**
-
+```bash
 echo "BOOTPROTO=static" > /etc/net/ifaces/ens20/options
-
 echo "TYPE=eth" >> /etc/net/ifaces/ens20/options
-
 echo "NM\_CONTROLLED=no" >> /etc/net/ifaces/ens20/options
-
 echo "DISABLED=no" >> /etc/net/ifaces/ens20/options
-
 echo "CONFIG\_WIRELESS=no" >> /etc/net/ifaces/ens20/options
-
 echo "SYSTEMD\_BOOTPROTO=static" >> /etc/net/ifaces/ens20/options
-
 echo "CONFIG\_IPV4=yes" >> /etc/net/ifaces/ens20/options
-
 echo "SYSTEMD\_CONTROLLED=no" >> /etc/net/ifaces/ens20/options
-
-**2. Включение маршрутизации**
-
+```
+2. **Включение маршрутизации**
+```bash
 Обновляем системные пакеты: apt-get update
-
 Устанавливаем текстовый редактор: apt-get install nano
-
 В файле /etc/net/sysctl.conf изменяем строку net.ipv4.ip\_forward (0 меняем на 1): nano /etc/net/sysctl.conf
-
 Изменения в файле sysctl.conf применяем следующей командой: sysctl -p /etc/sysctl.conf
-
-**3. Настройка NAT на ISP**
-
+```
+3. **Настройка NAT на ISP**
+```bash
 Обновляем системные пакеты: apt-get update
-
 Устанавливаем iptables: apt-get install iptables
-
 Прописываем  следующие настройки для iptables:
-
 iptables -t nat -A POSTROUTING -o ens18 -j MASQUERADE -s 172.16.1.0/28
-
 iptables -t nat -A POSTROUTING -o ens18 -j MASQUERADE -s 172.16.2.0/28
-
 Сохраняем изменения в правилах:
-
 iptables-save -f /etc/sysconfig/iptables
-
 sysctl -p /etc/sysctl.conf
-
 Запускаем и добавляем его в автозагрузку: systemctl enable --now iptables
-
 Перезапускаем его: systemctl restart iptables
-
-**Модуль 1 Задание 3**
-
+```
+#Модуль 1 Задание 3
 1. **Создание пользователя sshuser на HQ-SRV и BR-SRV**
-
-Создаем пользователя с идентификатором 1010 (-u) и принадлежностью к группе wheel (-G), добавляем право в файл /etc/sudoers и задаем ему пароль:
-
-useradd -u 1010 -G wheel sshuser
-
+```bash
+useradd -u 2026 -G wheel sshuser
 echo "sshuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
 passwd sshuser
-
-**2. Создание пользователя net\_admin на HQ-RTR и BR-RTR**
-
-Создаем пользователя и задаем ему роль:
-
+```
+2. **Создание пользователя net\_admin на HQ-RTR и BR-RTR**
+```bash
 en
-
 conf
-
 username net\_admin
-
 password P@$$word
-
 role admin
-
 end
-
 wr mem
+```
+#Модуль 1 Задание 4: выполнено в 1 задании
 
-**Модуль 1 Задание 4: выполнено в 1 задании**
-
-**Модуль 1 Задание 5**
+#Модуль 1 Задание 5
 
 1. **Настраиваем параметры службы ssh**
 
