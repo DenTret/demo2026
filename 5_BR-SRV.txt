@@ -1,0 +1,38 @@
+hostnamectl set-hostname br-srv.au-team.irpo; exec bash
+
+cat > /etc/net/ifaces/ens18/options << EOF
+BOOTPROTO=static
+TYPE=eth
+CONFIG_WIRELESS=no
+SYSTEMD_BOOTPROTO=static
+CONFIG_IPV4=yes
+DISABLED=no
+NM_CONTROLLED=no
+SYSTEMD_CONTROLLED=no
+EOF
+
+echo "192.168.0.14/28" > /etc/net/ifaces/ens18/ipv4address
+
+echo "default via 192.168.0.1" >> /etc/net/ifaces/ens18/ipv4route
+
+systemctl restart network
+
+useradd -u 2026 -G wheel sshuser
+
+echo "sshuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+passwd sshuser
+
+cat > /etc/openssh/sshd_config << EOF
+Port 2026
+MaxAuthTries 2
+PasswordAuthentication yes
+AllowUsers    sshuser
+Banner /etc/openssh/bannermotd
+EOF
+
+echo "Authorized access only!" > /etc/openssh/bannermotd
+
+systemctl restart sshd
+
+timedatectl set-timezone Asia/Yekaterinburg
