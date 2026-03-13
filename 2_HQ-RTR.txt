@@ -107,7 +107,7 @@ wr mem
 
 en
 conf
-ip pool HQ-CLI 192.168.200.1-192.168.200.30
+ip pool HQ-CLI 192.168.200.2-192.168.200.30
 dhcp-server 1
 pool HQ-CLI 1
 mask 27
@@ -115,7 +115,6 @@ gateway 192.168.200.1
 dns 192.168.100.30
 domain-name au-team.irpo
 exit
-ip dhcp excluded-address 192.168.200.1
 interface HQ-RTR-CLI
 dhcp-server 1
 end
@@ -127,6 +126,7 @@ ntp timezone utc+5
 do show ntp timezone
 end
 wr mem
+
 
 
 
