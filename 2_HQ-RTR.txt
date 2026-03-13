@@ -86,6 +86,7 @@ area 0 authentication
 ex  
 interface tunnel.0   
 ip ospf authentication-key ecorouter  
+end
 wr mem   
 
 en
@@ -125,4 +126,5 @@ ntp timezone utc+5
 do show ntp timezone
 end
 wr mem
+
 
