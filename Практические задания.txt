@@ -101,7 +101,6 @@ systemctl restart smb.service nmb.service
 systemctl enable --now smb.service nmb.service
 
 Задание 5: Создание HTTPS-сервера с самоподписанным сертификатом.
-
 apt-get update && apt-get install -y alterator-fbi alterator-ca
 systemctl enable --now ahttpd alteratord
 Заходим через браузер: <ip-адрес_машины>:8080
@@ -116,7 +115,6 @@ systemctl enable --now ahttpd alteratord
 > выбираем сертификат и нажимаем кнопку <положить>
 
 Задание 6: Развёртывание Nginx.
-
 apt-get update && apt-get install nginx -y
 cat > /etc/nginx/sites-available.d/default.conf << EOF
 server {
@@ -176,7 +174,6 @@ timedatectl set-timezone Asia/Novosibirsk
 systemctl restart chronyd
 
 Задание 9: Настройка Zabbix
-
 apt-get update && apt-get install postgresql17-server zabbix-server-pgsql fping
 /etc/init.d/postgresql initdb
 systemctl enable --now PostgreSQL
@@ -212,7 +209,6 @@ chown apache2:apache2 /var/www/webapps/zabbix/ui/conf
 http://<ip-сервера>/zabbix 
 
 Задание 10: Настройка DNS-сервера (bind). Добавьте зону lab.net
-
 apt-get update && apt-get install -y alterator-fbi alterator-bind alternator-net-domain
 systemctl enable --now ahttpd alteratord
 Заходим через браузер: <ip-адрес_машины>:8080
@@ -221,5 +217,35 @@ systemctl enable --now ahttpd alteratord
 > вводим название домена gubcol.yanao.ru и нажимаем кнопку создать
 > переходим на вкладку <Домен> и вводим название домена
 
+Задание 11: Установка Apache2
+apt-get update && apt-get install -y apache2
+systemctl enable --now httpd2
+заходим через браузер: <ip-адрес_машины>
 
+Задание 12: Управление дисковым пространством (LVM). расширить свободное пространство путем объединения дисков.
+lsblk #смотри существующие диски
+apt-get update && apt-get install -y lvm2
+pvcreate /dev/sd{b,c} #заменить на свои диски 
+pvdisplay
+vgcreate test01 /dev/sd{b,c} #заменить на свои диски
+vgdisplay
+lvcreate -L 1,99G test01
+mkfs.ext4 /dev/test01/lvol0
+mount /dev/test01/lvol0 /mnt/
+cat > /etc/fstab << EOF
+/dev/test01/lvol0       /mnt    ext4    defaults        0       0
+EOF
+mount -a
 
+Задание 13: Создание RAID-массива из двух жесткий дисков
+lsblk #смотри существующие диски
+mdadm -C /dev/md0 -l 0 -n 2 /dev/sd{b,c}
+lsblk
+mkfs.ext4 /dev/md0
+echo DEVICE partitions >> /etc/mdadm.conf
+mdadm --detail --scan >> /etc/mdadm.conf
+mkdir /raid
+cat > /etc/fstab << EOF
+/dev/md0	/raid ext4 defaults	0	0
+EOF
+mount -a
