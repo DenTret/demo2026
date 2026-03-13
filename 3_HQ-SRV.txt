@@ -24,7 +24,7 @@ echo "sshuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 passwd sshuser
 
 cat > /etc/openssh/sshd_config << EOF
-Port 2024
+Port 2026
 MaxAuthTries 2
 PasswordAuthentication yes
 AllowUsers    sshuser
@@ -65,3 +65,4 @@ systemctl status dnsmasq
 timedatectl set-timezone Asia/Yekaterinburg
 
 timedatectl status
+
