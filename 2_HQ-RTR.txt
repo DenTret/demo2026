@@ -51,7 +51,7 @@ wr mem
 en
 conf
 username net_admin
-password P@$$word
+password P@ssw0rd
 role admin
 end
 wr mem
@@ -126,5 +126,6 @@ ntp timezone utc+5
 do show ntp timezone
 end
 wr mem
+
 
 
