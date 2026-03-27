@@ -481,18 +481,20 @@ wr mem
 ### BR-SRV
 Изначально на BR-SRV не прописан DNS сервер, нужно указать его для возможности загрузки пакетов и работы Samba DC.
 ```bash
-vim /etc/resolvconf.conf
+cat > /etc/resolvconf.conf << EOF
 name_servers=127.0.0.1
 name_servers=192.168.1.10
 resolvconf -u
 systemctl restart network
+EOF
 ```
 ```bash
 apt-get update && apt-get install -y task-samba-dc alterator-fbi alterator-net-domain admx-* admc gpui
 ```
 ```bash
-vim /etc/sysconfig/network
+cat > /etc/sysconfig/network < EOF
 HOSTNAME=br-srv.au-team.irpo
+EOF
 ```
 ```bash
 reboot
@@ -503,7 +505,7 @@ rm -rf /etc/samba/smb.conf /var/{lib.cache}/samba
 mkdir -p /var/lib/samba/sysvol
 ```
 ```bash
-samba-tool domain provision --realm=au-team.irpo --domain=au-team --adminpass='P@ssw0rd' --dns-backend=BIND9_DLZ --server-role=dc --use-rfc2307 
+samba-tool domain provision 
 ```
 
 ### HQ-CLI
@@ -578,8 +580,8 @@ acc
 ### BR-SRV
 ```bash
 samba-tool group add hq
-for i in $(seq 1 5); do samba-tool user add user$i.hq 'P@ssw0rd'; done
-for i in $(seq 1 5); do samba-tool group addmembers hq user$i.hq; done
+for i in $(seq 1 5); do samba-tool user add hquser$i 'P@ssw0rd'; done
+for i in $(seq 1 5); do samba-tool group addmembers hq hquser$i.hq; done
 ```
 Проверим наличие группы hq в Samba, и созданных пользователей:
 ```bash
