@@ -1,485 +1,6 @@
-# demo2026
-# Модуль 1 Задание 1
-1. **Настройка рабочих машин (HQ-SRV, BR-SRV, HQ-CLI)**
-**Настройка имён HQ-SRV, BR-SRV, HQ-CLI**
-```bash
-Настройка имени устройства HQ-SRV: hostnamectl set-hostname hq-srv.au-team.irpo; exec bash
-Настройка имени устройства BR-SRV: hostnamectl set-hostname br-srv.au-team.irpo; exec bash
-Настройка имени устройства HQ-CLI: hostnamectl set-hostname hq-cli.au-team.irpo; exec bash
-```
-**Настройка ip-адресации рабочих машин**
-```bash
-**Таблица адресации**
-Имя устройства 	Интерфейс 	IPv4		Маска/Префикс 	Шлюз
-ISP 		
-ens18 		(DHCP) 		/24 		(DHCP)
-ens19 		172.16.1.1 	/28
-ens20 		172.16.2.1 	/28
-HQ-RTR 		
-HQ-RTR-ISP 	172.16.1.2 	/28 		172.16.1.1
-HQ-RTR-SRV	192.168.100.1 	/27
-HQ-RTR-CLI	192.168.200.1 	/27
-BR-RTR 		
-BR-RTR-ISP 	172.16.2.2 	/28 		172.16.2.1
-BR-RTR-SRV 	192.168.0.1 	/28
-HQ-SRV 		ens18 		192.168.100.30 	/27 		192.168.100.1
-BR-SRV 		ens18 		192.168.0.14 	/28 		192.168.0.1
-HQ-CLI 		ens18 		(DHCP)	 	/27 		(DHCP)
-```
-**Приводим файлы options, ipv4address, ipv4route в директории /etc/net/ifaces/<имя интерфейса>/ к следующему виду:**
-```bash
-**Файл options в HQ-SRV:**
-echo "BOOTPROTO=static" > /etc/net/ifaces/ens18/options
-echo "TYPE=eth" >> /etc/net/ifaces/ens18/options
-echo "CONFIG\_WIRELESS=no" >> /etc/net/ifaces/ens18/options
-echo "SYSTEMD\_BOOTPROTO=static" >> /etc/net/ifaces/ens18/options
-echo "CONFIG\_IPV4=yes" >> /etc/net/ifaces/ens18/options
-echo "DISABLED=no" >> /etc/net/ifaces/ens18/options
-echo "NM\_CONTROLLED=no" >> /etc/net/ifaces/ens18/options
-echo "SYSTEMD\_CONTROLLED=no" >> /etc/net/ifaces/ens18/options
-```
-```bash
-**Файл options в BR-SRV:**
-echo "BOOTPROTO=static" > /etc/net/ifaces/ens18/options
-echo "TYPE=eth" >> /etc/net/ifaces/ens18/options
-echo "CONFIG\_WIRELESS=no" >> /etc/net/ifaces/ens18/options
-echo "SYSTEMD\_BOOTPROTO=static" >> /etc/net/ifaces/ens18/options
-echo "CONFIG\_IPV4=yes" >> /etc/net/ifaces/ens18/options
-echo "DISABLED=no" >> /etc/net/ifaces/ens18/options
-echo "NM\_CONTROLLED=no" >> /etc/net/ifaces/ens18/options
-echo "SYSTEMD\_CONTROLLED=no" >> /etc/net/ifaces/ens18/options
-```
-```bash
-**Файл options в HQ-CLI:**
-echo "BOOTPROTO=dhcp" > /etc/net/ifaces/ens18/options
-echo "TYPE=eth" >> /etc/net/ifaces/ens18/options
-echo "CONFIG\_WIRELESS=no" >> /etc/net/ifaces/ens18/options
-echo "SYSTEMD\_BOOTPROTO=dhcp4" >> /etc/net/ifaces/ens18/options
-echo "CONFIG\_IPV4=yes" >> /etc/net/ifaces/ens18/options
-echo "DISABLED=no" >> /etc/net/ifaces/ens18/options
-echo "NM\_CONTROLLED=no" >> /etc/net/ifaces/ens18/options
-echo "SYSTEMD\_CONTROLLED=no" >> /etc/net/ifaces/ens18/options
-```
-```bash
-**Файл ipv4address в HQ-SRV:**
-echo "192.168.100.30/27" > /etc/net/ifaces/ens18/ipv4address
-**Файл ipv4address в BR-SRV:**
-echo "192.168.0.14/28" > /etc/net/ifaces/ens18/ipv4address
-**Файл ipv4route в HQ-SRV:**
-echo "default via 192.168.100.1" > /etc/net/ifaces/ens18/ipv4route
-**Файл ipv4route в BR-SRV:**
-echo "default via 192.168.0.1" > /etc/net/ifaces/ens18/ipv4route
-```
-2. **Настройка роутеров (HQ-RTR, BR-RTR)**
-**Настройка имени устройства HQ-RTR:**
-```bash
-en
-conf
-hostname hq-rtr.au-team.irpo
-end
-wr mem
-```
-**Настройка имени устройства BR-RTR:**
-```bash
-en
-conf
-hostname br-rtr.au-team.irpo
-end
-wr mem
-```
-**Настройка ip-адресации на HQ-RTR (с разделением на VLAN)**
-```bash
-en
-conf
-int HQ-RTR-ISP
-ip address 172.16.1.2/28
-port te0
-service-inst 0
-enc untagged
-conn ip int HQ-RTR-ISP
-exit
-int HQ-RTR-SRV
-ip address 192.168.100.1/27
-port te1
-service-inst 100
-enc dot1q 100
-rewrite pop 1
-conn ip int HQ-RTR-SRV
-exit
-int HQ-RTR-CLI
-ip address 192.168.200.1/27
-port te1
-service-inst 200
-enc dot1q 200
-rewrite pop 1
-conn ip int HQ-RTR-CLI
-end
-wr mem
-```
-**Адресация на BR-RTR (без разделения на VLAN)**
-```bash
-en
-conf
-int BR-RTR-ISP
-ip address 172.16.2.2/28
-port te0
-service-inst 0
-enc untagged
-conn ip int BR-RTR-ISP
-exit
-int BR-RTR-SRV
-ip address 192.168.0.1/28
-port te1
-service-inst 0
-enc untagged
-conn ip int  BR-RTR-SRV
-end
-wr mem
-```
-**Добавление маршрута по умолчанию в HQ-RTR:** 
-```bash
-ip route 0.0.0.0 0.0.0.0 172.16.1.1
-```
-**Добавление маршрута по умолчанию в BR-RTR:** 
-```bash
-ip route 0.0.0.0 0.0.0.0 172.16.2.1
-```
-# Модуль 1 Задание 2
-1. **Настройка интерфейсов, смотрящих в сторону HQ-RTR и BR-RTR (ens19, ens20)**
-
-**Файл ipv4address в ens19: 
-```bash
-echo "172.16.1.1/28" > etc/net/ifaces/ens19/ipv4address**
-```
-**Файл ipv4address в ens20: 
-```bash
-echo "172.16.2.1/28" > etc/net/ifaces/ens20/ipv4address**
-```
-**Файл options в /etc/net/ifaces/ens19 приводим к следующему виду:**
-```bash
-echo "BOOTPROTO=static" > /etc/net/ifaces/ens19/options
-echo "TYPE=eth" >> /etc/net/ifaces/ens19/options
-echo "NM\_CONTROLLED=no" >> /etc/net/ifaces/ens19/options
-echo "DISABLED=no" >> /etc/net/ifaces/ens19/options
-echo "CONFIG\_WIRELESS=no" >> /etc/net/ifaces/ens19/options
-echo "SYSTEMD\_BOOTPROTO=static" >> /etc/net/ifaces/ens19/options
-echo "CONFIG\_IPV4=yes" >> /etc/net/ifaces/ens19/options
-echo "SYSTEMD\_CONTROLLED=no" >> /etc/net/ifaces/ens19/options
-```
-**Файл options в /etc/net/ifaces/ens20 приводим к следующему виду:**
-```bash
-echo "BOOTPROTO=static" > /etc/net/ifaces/ens20/options
-echo "TYPE=eth" >> /etc/net/ifaces/ens20/options
-echo "NM\_CONTROLLED=no" >> /etc/net/ifaces/ens20/options
-echo "DISABLED=no" >> /etc/net/ifaces/ens20/options
-echo "CONFIG\_WIRELESS=no" >> /etc/net/ifaces/ens20/options
-echo "SYSTEMD\_BOOTPROTO=static" >> /etc/net/ifaces/ens20/options
-echo "CONFIG\_IPV4=yes" >> /etc/net/ifaces/ens20/options
-echo "SYSTEMD\_CONTROLLED=no" >> /etc/net/ifaces/ens20/options
-```
-2. **Включение маршрутизации**
-```bash
-Обновляем системные пакеты: apt-get update
-Устанавливаем текстовый редактор: apt-get install nano
-В файле /etc/net/sysctl.conf изменяем строку net.ipv4.ip\_forward (0 меняем на 1): nano /etc/net/sysctl.conf
-Изменения в файле sysctl.conf применяем следующей командой: sysctl -p /etc/sysctl.conf
-```
-3. **Настройка NAT на ISP**
-```bash
-Обновляем системные пакеты: apt-get update
-Устанавливаем iptables: apt-get install iptables
-Прописываем  следующие настройки для iptables:
-iptables -t nat -A POSTROUTING -o ens18 -j MASQUERADE -s 172.16.1.0/28
-iptables -t nat -A POSTROUTING -o ens18 -j MASQUERADE -s 172.16.2.0/28
-Сохраняем изменения в правилах:
-iptables-save -f /etc/sysconfig/iptables
-sysctl -p /etc/sysctl.conf
-Запускаем и добавляем его в автозагрузку: systemctl enable --now iptables
-Перезапускаем его: systemctl restart iptables
-```
-#Модуль 1 Задание 3
-1. **Создание пользователя sshuser на HQ-SRV и BR-SRV**
-```bash
-useradd -u 2026 -G wheel sshuser
-echo "sshuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-passwd sshuser
-```
-2. **Создание пользователя net\_admin на HQ-RTR и BR-RTR**
-```bash
-en
-conf
-username net\_admin
-password P@$$word
-role admin
-end
-wr mem
-```
-#Модуль 1 Задание 4: выполнено в 1 задании
-
-#Модуль 1 Задание 5
-
-1. **Настраиваем параметры службы ssh**
-
-Назначаем порт для подключения: echo "Port 2024" >> /etc/openssh/sshd\_config
-
-Устанавливаем максимальное количество попыток входа: echo "MaxAuthTries 2" >> /etc/openssh/sshd\_config
-
-Устанавливаем парольную защиту: echo "PasswordAuthentication yes" >> /etc/openssh/sshd\_config
-
-Разрешаем доступ пользователю sshuser: echo "AllowUsers(4 пробела)sshuser" >> /etc/openssh/sshd\_config
-
-Настраиваем предупреждение безопасности: echo "Banner /etc/openssh/bannermotd" >> /etc/openssh/sshd\_config
-
-Настраиваем текст для предупреждения: echo "Authorized access only" > /etc/openssh/bannermotd
-
-**2. Перезапускаем службу ssh: systemctl restart sshd**
-
-**Модуль 1 Задание 6**
-
-1. **Создание туннеля на HQ-RTR**
-
-**Создаем интерфейс GRE-туннеля на HQ-RTR, назначаем ему IP-адрес и выставляем mtu. Генерируем туннель:**
-
-en
-
-conf
-
-int tunnel.0
-
-ip address 172.16.0.1/30
-
-ip mtu 1400
-
-ip tunnel 172.16.1.2 172.16.2.2 mode gre
-
-end
-
-wr mem
-
-**2. Создание туннеля на BR-RTR**
-
-**Создаем интерфейс GRE-туннеля на BR-RTR, назначаем ему IP-адрес и выставляем mtu. Генерируем туннель:**
-
-en
-
-conf
-
-int tunnel.0
-
-ip address 172.16.0.2/30
-
-ip mtu 1400
-
-ip tunnel 172.16.2.2 172.16.1.2 mode gre
-
-end
-
-wr mem
-
-**Модуль 1 Задание 7**
-
-1. **Настройка OSPF на HQ-RTR**
-
-Создаем процесс OSPF, указываем идентификатор маршрутизатора, объявляем сети и указываем пассивные интерфейсы:
-
-conf
-
-router ospf 1
-
-router-id 1.1.1.1
-
-network 172.16.0.0/30 area 0
-
-network 192.168.100.0/27 area 0
-
-network 192.168.200.0/27 area 0
-
-passive-interface default
-
-no passive-interface tunnel.0
-
-end
-
-wr mem
-
-**2. Настройка OSPF на BR-RTR**
-
-Маршрутизация OSPF на BR-RTR настраивается аналогично, после нее можно произвести проверку OSPF-соседей:
-
-conf
-
-router ospf 2
-
-router-id 2.2.2.2
-
-network 172.16.0.0/30 area 0
-
-network 192.168.0.0/28 area 0
-
-passive-interface default
-
-no passive-interface tunnel.0
-
-end
-
-wr mem
-
-sh ip ospf neighbor
-
-**Модуль 1 Задание 8**
-
-1. **Настройка NAT на HQ-RTR**
-
-Указываем внутренние и внешние интерфейсы, создаем пул и правило трансляции адресов, указывая внешний интерфейс:
-
-conf
-
-int HQ-RTR-ISP
-
-ip nat outside
-
-int HQ-RTR-SRV
-
-ip nat inside
-
-int HQ-RTR-CLI
-
-ip nat inside
-
-exit
-
-ip nat pool HQ 192.168.100.1-192.168.100.30,192.168.200.1-192.168.200.30
-
-ip nat source dynamic inside-to-outside pool HQ overload interface HQ-RTR-ISP
-
-wr mem
-
-**2. Настройка NAT на BR-RTR**
-
-conf
-
-int BR-RTR-ISP
-
-ip nat outside
-
-int BR-RTR-SRV
-
-ip nat inside
-
-exit
-
-ip nat pool BR 192.168.0.1-192.168.0.14
-
-ip nat source dynamic inside-to-outside pool BR overload interface BR-RTR-ISP
-
-wr mem
-
-**Модуль 1 Задание 9**
-
-Создаем пул для DHCP-сервера на HQ-RTR, настраиваем и привязываем к интерфейсу:
-
-conf
-
-ip pool HQ-CLI 192.168.200.1-192.168.200.30
-
-dhcp-server 1
-
-pool HQ-CLI 1
-
-mask 27
-
-gateway 192.168.200.1
-
-dns 192.168.100.30
-
-domain-name au-team.irpo
-
-exit
-
-interface HQ-RTR-CLI
-
-dhcp-server 1
-
-end
-
-wr mem
-
-**Модуль 1 задание 10**
-
-1. Добавляем dns сервера гугла для установки утилиты
-
-mcedit /etc/resolv.conf
-
-Добавляем следующую строку в него:
-
-nameserver 8.8.8.8
-
-2\. Обновим пакеты и установим её командами:
-
-apt-get update
-
-apt-get install dnsmasq
-
-3\. Открываем конфигурационный файл: nano /etc/dnsmasq.conf
-
-И прописываем следующие настройки
-
-listen-address=192.168.100.30
-
-domain=au-team.irpo
-
-strict-order
-
-no-resolv
-
-server=8.8.8.8
-
-server=8.8.4.4
-
-address=/isp.au-team.irpo/(ip-адрес порта ens18 у isp)
-
-address=/hq-rtr.au-team.irpo/192.168.100.1
-
-address=/hq-srv.au-team.irpo/192.168.100.30
-
-address=/hq-cli.au-team.irpo/192.168.200.2
-
-address=/br-rtr.au-team.irpo/192.168.0.1
-
-address=/hq-srv.au-team.irpo/192.168.0.14
-
-4\. Сохраните файл /etc/dnsmasq.conf.
-
-5\. Перезапустите сервис: systemctl restart dnsmasq
-
-6\. Проверьте работу сервиса: systemctl status dnsmasq
-
-7\. После настройки dns-сервера прописываем всем машинам -"HQ-SRV, HQ-RTR, BR-RTR, BR-SRV", кроме HQ-CLI (так как настроили для него dhcp) в /etc/resolv.conf: 
-
-nameserver 192.168.100.30
-
-**Модуль 1 Задание 11**
-
-1. **Настройка часового пояса на HQ-SRV, BR-SRV, HQ-CLI**
-
-timedatectl set-timezone Asia/Yekaterinburg
-
-timedatectl status
-
-**2. Настройка часового пояса на HQ-RTR, BR-RTR**
-
-conf
-
-ntp timezone utc+5
-
-do show ntp timezone
-
-wr mem
-
 # Модуль 2 Задание 1
 
-### BR-SRV
-Изначально на BR-SRV не прописан DNS сервер, нужно указать его для возможности загрузки пакетов и работы Samba DC.
+**BR-SRV**
 ```bash
 cat > /etc/resolvconf.conf << EOF
 name_servers=127.0.0.1
@@ -487,38 +8,22 @@ name_servers=192.168.1.10
 resolvconf -u
 systemctl restart network
 EOF
-```
-```bash
 apt-get update && apt-get install -y task-samba-dc alterator-fbi alterator-net-domain admx-* admc gpui
-```
-```bash
-cat > /etc/sysconfig/network < EOF
+cat > /etc/sysconfig/network << EOF
 HOSTNAME=br-srv.au-team.irpo
 EOF
-```
-```bash
-reboot
-```
-```bash
 systemctl enable --now ahttpd alteratord
 rm -rf /etc/samba/smb.conf /var/{lib.cache}/samba
 mkdir -p /var/lib/samba/sysvol
-```
-```bash
 samba-tool domain provision 
 ```
-
-### HQ-CLI
-```bash
+**HQ-CLI**
+``` bash
 apt-get update && apt-get install -y admx-* admc gpui sudo gpupdate
 ```
+```bash
 **Открываем Firefox:** 
 - Переходим по адресу 192.168.3.10:8080
-- Данные для авторизации:
-```bash
-login: root
-password: toor
-```
 - Configuration > Expert mode > Apply
 - Web Interface
 - Меняем порт 8080 на 8081 > Apply > Restart http server
@@ -530,38 +35,18 @@ password: toor
 - Password - P@ssw0rd
 - Apply
 - Запускаем и дожидаемся состояния - OK.
-
-### BR-SRV:
-**Перепускаем систему и проверяем**:
-```bash
-ping ya.ru
-ping br-srv.au-team.irpo
-ping hq-rtr.au-team.irpo
 ```
-> [!TIP]
-> Если все работает - то ОК!
-
-### HQ-CLI:
-**Перепроверяем 192.168.3.10:8081**
-- Заходим в Domain
-> [!TIP]
-> Если сервер показывает статус OK, то идем дальше.
-
 **От рута выполняем:**
 ```bash
 nmcli con modify DHCP-CLI \
 	ipv4.method auto \
 	ipv4.ignore-auto-dns yes \
 	ipv4.dns 192.168.3.10
-```
-```bash
 nmcli con down DHCP-CLI
 nmcli con up DHCP-CLI
 ```
-**Открываем снова GUI и запускаем терминал, там прописываем**:
+**Открываем снова GUI и запускаем терминал, там прописываем**: acc
 ```bash
-acc
-```
 - Пароль toor
 - Выбрать Аутентификация в разделе пользователи. (Если интерфейс на английском языке, то Auth в Networking)
 - Обязательно выибраем - Домен Active Directory
@@ -574,52 +59,25 @@ acc
 - Включить групповые политики!
 - Напротив kerberos галочку НЕ ставить.
 - Применяем изменения.
-> [!TIP]
-> Если вход в домен произошел, то - ОК!
-
-### BR-SRV
+```
+**BR-SRV**
 ```bash
 samba-tool group add hq
 for i in $(seq 1 5); do samba-tool user add hquser$i 'P@ssw0rd'; done
 for i in $(seq 1 5); do samba-tool group addmembers hq hquser$i.hq; done
-```
-Проверим наличие группы hq в Samba, и созданных пользователей:
-```bash
-samba-tool group list
-samba-tool group listmembers hq
-```
-```bash
 admx-msi-setup
 ```
-### HQ-CLI
+**HQ-CLI**
 
 **Перезапускаем и входим как Administrator**:
-- Пароль: P@ssw0rd
-
-**Открываем терминал**:
-```bash
-su -
-toor
-```
 ```bash
 admx-msi-setup
+mcedit /etc/sudoers #Назначаем права root
+sudo roleadd hq wheel
 ```
-```bash
-roleadd hq wheel
-```
-```bash
-rolelst
-```
-> [!IMPORTANT]
-> **Проверяем наличие hq:wheel**
-
 **Добавляем в sudoers данные строки:**
 ```bash
 mcedit /etc/sudoers
-, %AU-TEAM\\hq
-Cmnd_Alias	SHELLCMD = /usr/bin/id, /bin/cat, /bin/grep
-SHELLCMD
-```
 Для понимания где находятся эти строки, и куда их нужно добавить - пример того как это реализовано у меня:
 ```bash
 User_Alias WHEEL_USERS = %wheel, %AU-TEAM\\hq # Первая строка
@@ -638,7 +96,7 @@ Cmnd_Alias SHELLCMD = /usr/bin/id, /bin/cat, /bin/grep # Вторая строк
 ## Uncomment to allow members of group wheel to execute any command
 WHEEL_USERS ALL=(ALL:ALL) SHELLCMD # Третья строка
 ```
-```
+```bash
 exit
 ```
 **После того как вышли из под рута, выполняем kinit:**
@@ -650,6 +108,7 @@ P@ssw0rd
 admc
 ```
 **Настроим групповую политку:**
+```bash
 - Объекты групповой политики
 - au-team.irpo > правой кнопкой мыши
 - Создать политику и связать с этим подразделением
@@ -667,15 +126,14 @@ admc
 - /bin/cat
 - /bin/grep
 - Применяем и выходим из admc.
+```
 ```bash
 gpupdate -f
 ```
 > [!IMPORTANT]
 > Прописываем 2 раза подряд чтобы команда точно применилась, иногда не срабатывает с 1 раза.
 
-**Заходим из под user5.hq:**
-- Пароль - P@ssw0rd
-
+**Заходим из под hquser5**
 ```bash
 sudo id
 P@ssw0rd
@@ -687,34 +145,12 @@ sudo cat /root/.bashrc | grep root
 
 ## 📋 Задание 11: Удобным способом установите приложение Яндекс Браузер на HQ-CLI.
 
-**Задание 11:**
-- Установку браузера отметьте в отчёте.
-
-> [!IMPORTANT]
-> Готовый отчет можно взять - [тут.](./report_2026.odt)
-
-**Самый лучший способ: установить напрямую через пакетный менеджер.**
 ```bash
 apt-get update && apt-get install yandex-browser -y
 ```
 ## 📋 Задание 2: Сконфигурируйте файловое хранилище на сервере HQ-SRV + Задание 3: Настройте сервер сетевой файловой системы (nfs) на HQ-SRV.
 
-**Задание 2:**
-
-- При помощи двух подключенных к серверу дополнительных дисков размером 1 Гб сконфигурируйте дисковый массив уровня 0
-- Имя устройства – md0, при необходимости конфигурация массива размещается в файле /etc/mdadm.conf
-- Создайте раздел, отформатируйте раздел, в качестве файловой системы используйте ext4
-- Обеспечьте автоматическое монтирование в папку /raid
-
-**Задание 3:**
-- В качестве папки общего доступа выберите /raid/nfs, доступ для чтения и записи исключительно для сети в сторону HQ-CLI
-- На HQ-CLI настройте автомонтирование в папку /mnt/nfs
-- Основные параметры сервера отметьте в отчёте
-  
-> [!IMPORTANT]
-> Готовый отчет можно взять - [тут.](./report_2026.odt)
-
-### HQ-SRV
+**HQ-SRV**
 ```bash
 lsblk
 mdadm -C /dev/md0 -l 0 -n 2 /dev/sd{b,c}
@@ -722,11 +158,12 @@ lsblk
 mkfs.ext4 /dev/md0
 echo DEVICE partitions >> /etc/mdadm.conf
 mdadm --detail --scan >> /etc/mdadm.conf
-mkdir /raid
+mkdir /raid0
 ```
 ```bash
-mcedit /etc/fstab
-/dev/md0	/raid ext4 defaults	0	0
+cat > /etc/fstab << EOF
+/dev/md0	/raid0 ext4 defaults	0	0
+EOF
 ```
 ```bash
 mount -a
@@ -735,14 +172,14 @@ lsblk
 ```
 ```bash
 apt-get update && apt-get install -y nfs-{server,utils}
-mkdir /raid/nfs
-chmod 766 /raid/nfs
+mkdir /raid0/nfs
+chmod 766 /raid0/nfs
 ```
 > [!WARNING]
 > Комментируем первую строку в файле /etc/exports, в самом низу прописываем, то что идет ниже.
 ```
 mcedit /etc/exports
-/raid/nfs 192.168.2.0/28(rw,no_subtree_check,no_root_squash)
+/raid0/nfs 192.168.2.0/28(rw,no_subtree_check,no_root_squash)
 ```
 **Применяем изменения:**
 ```bash
@@ -757,8 +194,9 @@ mkdir /mnt/nfs
 chmod 777 /mnt/nfs
 ```
 ```bash
-mcedit /etc/fstab
+cat > /etc/fstab << EOF
 192.168.1.10:/raid/nfs	/mnt/nfs	nfs	defaults	0	0
+EOF
 systemctl enable --now nfs-server.service
 systemctl restart nfs-server.service
 ```
@@ -785,51 +223,40 @@ tmpfs                    247M          80K  247M            1% /run/user/8120011
 
 ## 📋 Задание 4: Настройте службу сетевого времени на базе сервиса chrony на маршрутизаторе ISP.
 
-**Задание 4:**
-- Вышестоящий сервер ntp на маршрутизаторе ISP - на выбор участника.
-- Стратум сервера - 5
-- В качестве клиентов ntp настройте: HQ-SRV, HQ-CLI, BR-RTR, BR-SRV.
-
-### ISP
+**ISP**
 ```bash
 apt-get update && apt-get install -y chrony tzdata
 ```
 ```bash
-vim /etc/chrony.conf
+cat >  /etc/chrony.conf << EOF
 initstepslew 10 ntp0.ntp-servers.net
 pool 127.0.0.1 iburst prefer
 hwtimestamp *
 local stratum 5
 allow 0/0
+EOF
 ```
 **Запустим службу времени:**
 ```bash
 systemctl restart chronyd
 systemctl enable --now chronyd
-timedatectl set-timezone Asia/Novosibirsk
+timedatectl set-timezone Asia/Yekaterinburg
 ```
 **В качестве клиентов настроим: HQ-SRV, HQ-CLI, BR-RTR, BR-SRV, выполнить настройку нужно идентично нижней на всех 4-ех клиентах.**
 ```bash
 apt-get update && apt-get install -y chrony tzdata
-vim /etc/chrony.conf
+cat > /etc/chrony.conf << EOF
 pool 172.16.1.1 iburst prefer
+EOF
 systemctl restart chronyd
 systemctl enable --now chronyd
-timedatectl set-timezone Asia/Novosibirsk
+timedatectl set-timezone Asia/Yekaterinburg
 ```
-### HQ-RTR
-**Хоть на HQ-RTR и не настраивается chrony, но часовой пояс укажем и там тоже.**
-```bash
-timedatectl set-timezone Asia/Novosibirsk
-```
-> [!NOTE]
-> ⚠️ 💡 **Примечание**: На HQ-CLI уже будет сервер времени, нужно лишь добавить новый pool и перезагрузить chronyd.
-
-### ISP
+**ISP**
 ```bash
 systemctl restart chronyd
 ```
-### HQ-SRV, HQ-CLI, BR-RTR, BR-SRV
+**HQ-SRV, HQ-CLI, BR-RTR, BR-SRV**
 ```bash
 chronyc sources
 ```
@@ -854,7 +281,7 @@ MS Name/IP address         Stratum Poll Reach LastRx Last sample
 apt-get update && apt-get install openssh-server ansible sshpass nano -y
 ```
 ```bash
-nano /etc/ansible/hosts
+cat > /etc/ansible/hosts << EOF
 [Alt]
 hq-rtr.au-team.irpo ansible_ssh_user=net_admin ansible_ssh_pass=P@ssw0rd
 hq-srv.au-team.irpo ansible_ssh_user=sshuser ansible_ssh_pass=P@ssw0rd
@@ -863,6 +290,7 @@ br-rtr.au-team.irpo ansible_ssh_user=net_admin ansible_ssh_pass=P@ssw0rd
 
 [Alt:vars]
 ansible_port=2026
+EOF
 ```
 ```bash
 nano /etc/ansible/ansible.cfg
@@ -1511,11 +939,3 @@ Dec 14 22:16:44 isp.au-team.irpo nginx[7780]: nginx: the configuration file /etc
 Dec 14 22:16:44 isp.au-team.irpo nginx[7780]: nginx: configuration file /etc/nginx/nginx.conf test is successful
 Dec 14 22:16:44 isp.au-team.irpo systemd[1]: Started The nginx HTTP and reverse proxy server.
 ```
-> [!NOTE]
-> Открываем Firefox/Яндекс браузер на HQ-CLI и пробуем зайти на http://web.au-team.irpo, если сайт просит авторизоваться, то значит задание выполнено верно.
-
-> [!Tip]
-> Демонстрационнный экзамен (ССА) 2026 года выполнен. 
-
-> [!IMPORTANT]
-> Осталось заполнить отчет, готовый отчет можно взять - [здесь](./report_2026.odt).
