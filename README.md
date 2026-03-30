@@ -79,7 +79,7 @@ sudo roleadd hq wheel
 ```bash
 mcedit /etc/sudoers
 Для понимания где находятся эти строки, и куда их нужно добавить - пример того как это реализовано у меня:
-```bash
+
 User_Alias WHEEL_USERS = %wheel, %AU-TEAM\\hq # Первая строка
 User_Alias XGRP_USERS = %xgrp
 # User_Alias SUDO_USERS = %sudo
@@ -195,7 +195,7 @@ chmod 777 /mnt/nfs
 ```
 ```bash
 cat > /etc/fstab << EOF
-192.168.1.10:/raid/nfs	/mnt/nfs	nfs	defaults	0	0
+192.168.1.10:/raid0/nfs	/mnt/nfs	nfs	defaults	0	0
 EOF
 systemctl enable --now nfs-server.service
 systemctl restart nfs-server.service
@@ -315,10 +315,11 @@ ansible -m ping all
 apt-get update && apt-get install openssh-server -y
 ```
 ```bash
-vim /etc/openssh/sshd_config
+cat > /etc/openssh/sshd_config << EOF
 Port 2026
 MaxAuthTries 2
 AllowUsers sshuser
+EOF
 ```
 ```bash
 systemctl enable --now sshd
@@ -330,10 +331,11 @@ systemctl restart sshd
 apt-get update && apt-get install openssh-server -y
 ```
 ```bash
-vim /etc/openssh/sshd_config
+cat > /etc/openssh/sshd_config << EOF
 Port 2026
 MaxAuthTries 2
 AllowUsers net_admin
+EOF
 ```
 ```bash
 systemctl enable --now sshd
@@ -351,16 +353,16 @@ P@ssw0rd
 usermod -a -G remote sysadmin
 ```
 ```bash
-vim /etc/openssh/sshd_config
+cat > /etc/openssh/sshd_config << EOF
 Port 2026
 MaxAuthTries 2
 AllowGroups wheel remote
+EOF
 ```
 ```bash
 systemctl enable --now sshd
 systemctl restart sshd
 ```
-
 ### BR-SRV
 ```bash
 ansible -m ping all
@@ -390,16 +392,9 @@ hq-cli.au-team.irpo | SUCCESS => {
 ## 📋 Задание 6:  Разверните веб приложение в docker на сервере BR-SRV.
 
 **Задание 6:**
-- Средствами docker должен создаваться стек контейнеров с веб приложением и базой данных
-- Используйте образы site_latest и mariadb_latest располагающиеся в директории docker в образе Additional.iso
-- Основной контейнер testapp должен называться tespapp
-- Контейнер с базой данных должен называться db
-- Импортируйте образы в docker, укажите в yaml файле параметры подключения к СУБД, имя БД - testdb, пользователь testс паролем P@ssw0rd, порт приложения 8080, при необходимости другие параметры
-- Приложение должно быть доступно для внешних подключений через порт 8080
-
 ### BR-SRV
 ```bash
-apt-get update && apt-get install docker-ce docker-compose -y
+apt-get update && apt-get install docker-ce docker-compose curl -y
 systemctl enable --now docker.socket docker.service
 systemctl restart docker.socket docker.service
 ```
@@ -466,39 +461,10 @@ mariadb      10.11     bc52d24721da   4 months ago   327MB
 **Создаем директорию и файл конфигурации:**
 ```bash
 mkdir testapp
-nano testapp/docker-compose.yaml
+cd testapp/
+curl https://github.com/DenTret/demo2026/site.yaml
 ```
-```bash
-services:
-  testapp:
-    image: site:latest
-    container_name: testapp # В задании указано tespapp, скорее всего опечатка составителей.
-    restart: always
-    depends_on:
-      - db
-    ports:
-      - "8080:8000"
-    environment:
-      DB_TYPE: maria
-      DB_HOST: db
-      DB_NAME: testdb
-      DB_PORT: 3306
-      DB_USER: testc
-      DB_PASS: P@ssw0rd   
-
-  db:
-    image: mariadb:10.11
-    container_name: db
-    restart: always
-    environment:
-      MARIADB_NAME: testdb
-      MARIADB_USER: testc
-      MARIADB_PASS: P@ssw0rd   
-      MARIADB_ROOT_PASSWORD: toor
-    volumes:
-      - /root/testapp/db_data:/var/lib/mysql
-```
-**Переходим в директорию если ещё не перешли, и поднимаем Docker:**
+**Поднимаем Docker:**
 ```bash
 cd testapp/
 docker compose up -d
