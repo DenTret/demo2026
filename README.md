@@ -5,9 +5,9 @@
 cat > /etc/resolvconf.conf << EOF
 name_servers=127.0.0.1
 name_servers=192.168.1.10
+EOF
 resolvconf -u
 systemctl restart network
-EOF
 apt-get update && apt-get install -y task-samba-dc alterator-fbi alterator-net-domain admx-* admc gpui
 cat > /etc/sysconfig/network << EOF
 HOSTNAME=br-srv.au-team.irpo
