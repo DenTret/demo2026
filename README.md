@@ -519,23 +519,6 @@ FLUSH PRIVILEGES;
 > После изменений сайт может начать открываться не сразу, иногда нужно до 1 минуты.
  
 ## 📋 Задание 7:  Разверните веб приложение на сервере HQ-SRV.
-
-**Задание 7:**
-
-- Используйте веб-сервер apache
-- В качестве системы управления базами данных используйте mariadb
-- Файлы веб приложения и дамп базы данных находятся в директории web образа Additional.iso
-- Выполните импорт схемы и данных из файла dump.sql в базу данных webdb
-- Создайте пользователя web с паролем P@ssw0rd и предоставьте ему права доступа к этой базе данных
-- Файлы index.php и директорию images скопируйте в каталог веб сервера apache
-- В файле index.php укажите правильные учётные данные для подключения к БД
-- Запустите веб сервер и убедитесь в работоспособности приложения
-- Основные параметры отметьте в отчёте
-
-> [!IMPORTANT]
-> Готовый отчет можно взять - [тут.](./report_2026.odt)
-
-### HQ-SRV
 ```bash
 apt-get update && apt-get install apache2 mariadb php8.2 apache2-mod_php8.2 php8.2-mysqli -y
 ```
@@ -638,7 +621,7 @@ ls -la /var/www/html/logo.png
 -r-xr-xr-x 1 apache2 webmaster 16780 Dec 14 15:25 /var/www/html/logo.png
 ```
 ```bash
-vim /var/www/html/index.php
+mcedit /var/www/html/index.php
 ```
 **Приводим к такому виду:**
 ```bash
@@ -674,14 +657,6 @@ systemctl restart httpd2 mariadb
 > Задание выполенено, веб-приложение работает на Apache + PHP + MariaDB, доступно по сети, выполняет CRUD-операции с базой данных сотрудников.
 
 ## 📋 Задание 8: На маршрутизаторах сконфигурируйте статическую трансляцию портов.
-
-**Задание 8:**
- 
-- Пробросьте порт 8080 в порт приложения testapp BR-SRV на маршрутизаторе BR-RTR, для обеспечения работы приложения testapp извне.
-- Пробросьте порт 8080 в порт веб приложения на HQ-SRV на маршрутизаторе HQ-RTR, для обеспечения работы веб приложения извне.
-- Пробросьте порт 2026 на маршрутизаторе HQ-RTR в порт 2026 сервера HQ-SRV, для подключения к серверу по протоколу ssh из внешних сетей.
-- Пробросьте порт 2026 на маршрутизаторе BR-RTR в порт 2026 сервера BR-SRV, для подключения к серверу по протоколу ssh из внешних сетей.
-
 ### BR-RTR
 ```bash
 apt-get update && apt-get install iptables -y
@@ -722,7 +697,6 @@ Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
 Chain POSTROUTING (policy ACCEPT 1 packets, 76 bytes)
  pkts bytes target     prot opt in     out     source               destination  
 ```
-
 ### HQ-RTR
 ```bash
 apt-get update && apt-get install iptables -y
@@ -767,12 +741,6 @@ Chain POSTROUTING (policy ACCEPT 2 packets, 116 bytes)
 > Если выводы совпадают, задание выполнено верно.
 
 ## 📋 Задание 9: Настройте веб-сервер nginx как обратный прокси-сервер на ISP.
-
-**Задание 9**:
-
-- При обращении по доменному имени web.au-team.irpo у клиента должно открываться веб приложение на HQ-SRV.
-- При обращении по доменному имени docker.au-team.irpo клиента должно открываться веб приложение testapp.
-
 ### ISP
 ```bash
 apt-get update && apt-get install nginx nano -y
@@ -815,7 +783,7 @@ systemctl status nginx
 ```
 ### HQ-CLI
 ```bash
-vim /etc/hosts
+mcedit /etc/hosts
 ```
 ```bash
 172.16.1.1	web.au-team.irpo web
@@ -826,14 +794,6 @@ vim /etc/hosts
 
 
 ## 📋 Задание 10: На маршрутизаторе ISP настройте web-based аутентификацию
-
-**Задание 10**:
-
-- При обращении к сайту web.au-team.irpo клиенту должно быть предложено ввести аутентификационные данные.
-- В качестве логина для аутентификации выберите WEB с паролем P@ssw0rd.
-- Выберите файл /etc/nginx/.htpasswd в качестве хранилища учётных записей.
-- При успешной аутентификации клиент должен перейти на веб сайт.
-
 ### ISP
 ```bash
 apt-get update && apt-get install apache2-htpasswd -y
