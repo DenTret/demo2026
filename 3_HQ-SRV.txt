@@ -17,11 +17,9 @@ echo "default via 192.168.100.1" > /etc/net/ifaces/ens18/ipv4route
 
 systemctl restart network
 
-useradd -u 2026 -G wheel sshuser
+useradd -u 2026 -G wheel sshuser -p P@ssw0rd
 
 echo "sshuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
-passwd sshuser
 
 cat > /etc/openssh/sshd_config << EOF
 Port 2026
