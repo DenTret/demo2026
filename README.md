@@ -161,9 +161,7 @@ mdadm --detail --scan >> /etc/mdadm.conf
 mkdir /raid0
 ```
 ```bash
-cat > /etc/fstab << EOF
-/dev/md0	/raid0 ext4 defaults	0	0
-EOF
+echo "/dev/md0	/raid0 ext4 defaults	0	0" >> /etc/fstab
 ```
 ```bash
 mount -a
