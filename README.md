@@ -64,7 +64,7 @@ nmcli con up DHCP-CLI
 ```bash
 samba-tool group add hq
 for i in $(seq 1 5); do samba-tool user add hquser$i 'P@ssw0rd'; done
-for i in $(seq 1 5); do samba-tool group addmembers hq hquser$i.hq; done
+for i in $(seq 1 5); do samba-tool group addmembers hq hquser$i; done
 admx-msi-setup
 ```
 **HQ-CLI**
