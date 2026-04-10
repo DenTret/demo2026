@@ -460,7 +460,7 @@ mariadb      10.11     bc52d24721da   4 months ago   327MB
 ```bash
 mkdir testapp
 cd testapp/
-curl https://github.com/DenTret/demo2026/site.yaml
+curl -O https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/site.yaml
 ```
 **Поднимаем Docker:**
 ```bash
