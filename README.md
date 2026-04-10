@@ -464,7 +464,7 @@ curl -O https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/site.
 **Поднимаем Docker:**
 ```bash
 cd testapp/
-docker compose up -d
+docker compose  -f site.yaml up -d
 docker ps
 ```
 **Сверяем вывод:**
