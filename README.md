@@ -345,8 +345,7 @@ systemctl restart sshd
 apt-get update && apt-get install openssh-server -y
 ```
 ```bash
-useradd sysadmin
-passwd sysadmin
+useradd sysadmin -p P@ssw0rd
 P@ssw0rd
 usermod -a -G remote sysadmin
 ```
