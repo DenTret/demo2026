@@ -193,9 +193,8 @@ mkdir /mnt/nfs
 chmod 777 /mnt/nfs
 ```
 ```bash
-cat > /etc/fstab << EOF
+mcedit /etc/fstab
 192.168.1.10:/raid0/nfs	/mnt/nfs	nfs	defaults	0	0
-EOF
 systemctl enable --now nfs-server.service
 systemctl restart nfs-server.service
 ```
