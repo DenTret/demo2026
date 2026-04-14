@@ -16,9 +16,8 @@ systemctl enable --now ahttpd alteratord
 rm -rf /etc/samba/smb.conf /var/{lib.cache}/samba
 mkdir -p /var/lib/samba/sysvol
 ```
-**При вводе команды смотрим чтобы совпадали варианты в скобках: realm=au-team.irpo domain=au-team server-role=dc dns-backend=BIND9_DLZ**
 ```bash
-samba-tool domain provision
+samba-tool domain provision --realm=au-team.irpo --domain=au-team --adminpass='P@ssw0rd' --dns-backend=BIND9_DLZ --server-role=dc --use-rfc2307 
 ```
 **HQ-CLI**
 ``` bash
