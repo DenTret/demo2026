@@ -16,7 +16,7 @@ rm -rf /etc/samba/smb.conf /var/{lib.cache}/samba
 mkdir -p /var/lib/samba/sysvol
 ```
 ```bash
-samba-tool domain provision --realm=au-team.irpo --domain=au-team --adminpass='P@ssw0rd' --dns-backend=BIND9_DLZ --server-role=dc --use-rfc2307 
+samba-tool domain provision
 ```
 **HQ-CLI**
 ``` bash
