@@ -749,10 +749,10 @@ Chain POSTROUTING (policy ACCEPT 2 packets, 116 bytes)
 ## 📋 Задание 9: Настройте веб-сервер nginx как обратный прокси-сервер на ISP.
 ### ISP
 ```bash
-apt-get update && apt-get install nginx nano -y
+apt-get update && apt-get install nginx mc -y
 ```
 ```bash
-nano /etc/nginx/sites-available.d/default.conf
+mcedit /etc/nginx/sites-available.d/default.conf
 ```
 **Приводим к такому:**
 ```bash
@@ -809,7 +809,7 @@ htpasswd -c /etc/nginx/.htpasswd WEB
 P@ssw0rd
 ```
 ```bash
-nano /etc/nginx/sites-available.d/default.conf
+mcedit /etc/nginx/sites-available.d/default.conf
 ```
 **Добавляем 2 строки после proxy_pass в web.au-team.irpo, чтобы получилось такое содержимое файла:**
 ```bash
