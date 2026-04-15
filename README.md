@@ -7,6 +7,8 @@ name_servers=192.168.1.10
 EOF
 resolvconf -u
 systemctl restart network
+```
+```bash
 apt-get update && apt-get install -y task-samba-dc alterator-fbi alterator-net-domain admx-* admc gpui
 sed -i 's/HOSTNAME=NONAME/HOSTNAME=br-rtr.au-team.irpo/g' /etc/sysconfig/network
 systemctl enable --now ahttpd alteratord
