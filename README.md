@@ -161,9 +161,10 @@ mdadm --detail --scan >> /etc/mdadm.conf
 mkdir /raid0
 ```
 ```bash
-cat >> /etc/fstab << EOF 
+mcedit /etc/fstab
+```
+```bash 
 /dev/md0	/raid0	ext4	defaults	0	0
-EOF 
 ```
 ```bash
 mount -a
@@ -193,9 +194,12 @@ mkdir /mnt/nfs
 chmod 777 /mnt/nfs
 ```
 ```bash
-cat >> /etc/fstab <<EOF
+mcedit /etc/fstab
+```
+```bash
 192.168.1.10:/raid0/nfs	/mnt/nfs	nfs	defaults	0	0
-EOF
+```
+```bash
 systemctl enable --now nfs-server.service
 systemctl restart nfs-server.service
 ```
