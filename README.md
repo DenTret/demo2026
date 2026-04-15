@@ -315,7 +315,7 @@ ansible -m ping all
 apt-get update && apt-get install openssh-server -y
 ```
 ```bash
-cat > /etc/openssh/sshd_config << EOF
+cat >> /etc/openssh/sshd_config << EOF
 Port 2026
 MaxAuthTries 2
 AllowUsers sshuser
@@ -331,7 +331,7 @@ systemctl restart sshd
 apt-get update && apt-get install openssh-server -y
 ```
 ```bash
-cat > /etc/openssh/sshd_config << EOF
+cat >> /etc/openssh/sshd_config << EOF
 Port 2026
 MaxAuthTries 2
 AllowUsers net_admin
@@ -347,12 +347,11 @@ systemctl restart sshd
 apt-get update && apt-get install openssh-server -y
 ```
 ```bash
-useradd sysadmin -p P@ssw0rd
-P@ssw0rd
-usermod -a -G remote sysadmin
+sudo useradd sysadmin -p P@ssw0rd
+sudo usermod -a -G remote sysadmin
 ```
 ```bash
-cat > /etc/openssh/sshd_config << EOF
+cat >> /etc/openssh/sshd_config << EOF
 Port 2026
 MaxAuthTries 2
 AllowGroups wheel remote
