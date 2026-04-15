@@ -1,5 +1,4 @@
 # Модуль 2 Задание 1
-
 **BR-SRV**
 ```bash
 cat >> /etc/resolvconf.conf << EOF
@@ -68,7 +67,6 @@ for i in $(seq 1 5); do samba-tool group addmembers hq hquser$i; done
 admx-msi-setup
 ```
 **HQ-CLI**
-
 **Перезапускаем и входим как Administrator**:
 ```bash
 admx-msi-setup
