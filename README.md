@@ -134,7 +134,8 @@ gpupdate -f
 **Перезагружаем систему и заходим из под hquser5**
 ```bash
 sudo id
-P@ssw0rd
+```
+```bash
 sudo cat /root/.bashrc
 sudo cat /root/.bashrc | grep root
 ```
