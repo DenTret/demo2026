@@ -72,14 +72,12 @@ admx-msi-setup
 **Перезапускаем и входим как Administrator**:
 ```bash
 admx-msi-setup
-mcedit /etc/sudoers #Назначаем права root
-sudo roleadd hq wheel
 ```
-**Добавляем в sudoers данные строки:**
+
+**Добавляем в sudoers данные строки, а также раскоментируем строку с правами root:**
 ```bash
 mcedit /etc/sudoers
 Для понимания где находятся эти строки, и куда их нужно добавить - пример того как это реализовано у меня:
-
 User_Alias WHEEL_USERS = %wheel, %AU-TEAM\\hq # Первая строка
 User_Alias XGRP_USERS = %xgrp
 # User_Alias SUDO_USERS = %sudo
@@ -97,9 +95,9 @@ Cmnd_Alias SHELLCMD = /usr/bin/id, /bin/cat, /bin/grep # Вторая строк
 WHEEL_USERS ALL=(ALL:ALL) SHELLCMD # Третья строка
 ```
 ```bash
-exit
+sudo roleadd hq wheel
 ```
-**После того как вышли из под рута, выполняем kinit:**
+**Возвращаемся в GUI и в терминале выполняем команды от Administrator**
 ```bash
 kinit
 P@ssw0rd
