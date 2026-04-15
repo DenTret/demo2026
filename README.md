@@ -161,8 +161,9 @@ mdadm --detail --scan >> /etc/mdadm.conf
 mkdir /raid0
 ```
 ```bash
-mcedit /etc/fstab 
-/dev/md0	/raid0	ext4	defaults	0	0 
+cat >> /etc/fstab << EOF 
+/dev/md0	/raid0	ext4	defaults	0	0
+EOF 
 ```
 ```bash
 mount -a
@@ -177,8 +178,9 @@ chmod 766 /raid0/nfs
 > [!WARNING]
 > Комментируем первую строку в файле /etc/exports, в самом низу прописываем, то что идет ниже.
 ```
-mcedit /etc/exports
+cat >> /etc/exports << EOF
 /raid0/nfs 192.168.2.0/28(rw,no_subtree_check,no_root_squash)
+EOF
 ```
 **Применяем изменения:**
 ```bash
@@ -193,8 +195,9 @@ mkdir /mnt/nfs
 chmod 777 /mnt/nfs
 ```
 ```bash
-mcedit /etc/fstab
+cat >> /etc/fstab <<EOF
 192.168.1.10:/raid0/nfs	/mnt/nfs	nfs	defaults	0	0
+EOF
 systemctl enable --now nfs-server.service
 systemctl restart nfs-server.service
 ```
@@ -220,7 +223,6 @@ tmpfs                    247M          80K  247M            1% /run/user/8120011
 > ⚠️ 💡 **Примечание**: Выполняем перезагрузку обоих машин и проверяем вывод через df -h на HQ-CLI, расшаренная файловая система с RAID - должна быть автоматически доступна.
 
 ## 📋 Задание 4: Настройте службу сетевого времени на базе сервиса chrony на маршрутизаторе ISP.
-
 **ISP**
 ```bash
 apt-get update && apt-get install -y chrony tzdata
@@ -268,7 +270,6 @@ MS Name/IP address         Stratum Poll Reach LastRx Last sample
 > ⚠️ 💡 **Примечание**: На HQ-CLI будет 2 сервера в выводе, но приоритетный ISP.
 
 ## 📋 Задание 5:  Сконфигурируйте ansible на сервере BR-SRV
-
 **Задание 5:**
 - Сформируйте файл инвентаря, в инвентарь должны входить HQ-SRV, HQ-CLI, HQ-RTR и BR-RTR
 - Рабочий каталог ansible должен располагаться в /etc/ansible
@@ -292,6 +293,8 @@ EOF
 ```
 ```bash
 nano /etc/ansible/ansible.cfg
+```
+```bash
 [defaults]
 
 interpreter_python = /usr/bin/python3
