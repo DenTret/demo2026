@@ -9,9 +9,7 @@ EOF
 resolvconf -u
 systemctl restart network
 apt-get update && apt-get install -y task-samba-dc alterator-fbi alterator-net-domain admx-* admc gpui
-cat >> /etc/sysconfig/network << EOF
-HOSTNAME=br-srv.au-team.irpo
-EOF
+sed -i 's/HOSTNAME=NONAME/HOSTNAME=br-rtr.au-team.irpo/g' /etc/sysconfig/network
 systemctl enable --now ahttpd alteratord
 rm -rf /etc/samba/smb.conf /var/{lib.cache}/samba
 mkdir -p /var/lib/samba/sysvol
