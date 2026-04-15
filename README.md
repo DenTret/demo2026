@@ -176,7 +176,7 @@ mkdir /raid0/nfs
 chmod 766 /raid0/nfs
 ```
 > [!WARNING]
-> Комментируем первую строку в файле /etc/exports, в самом низу прописываем, то что идет ниже.
+> Комментируем первую строку в файле mcedit /etc/exports, в самом низу прописываем, то что идет ниже.
 ```
 cat >> /etc/exports << EOF
 /raid0/nfs 192.168.2.0/28(rw,no_subtree_check,no_root_squash)
