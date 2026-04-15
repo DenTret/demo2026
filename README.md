@@ -2,7 +2,7 @@
 
 **BR-SRV**
 ```bash
-cat > /etc/resolvconf.conf << EOF
+cat >> /etc/resolvconf.conf << EOF
 name_servers=127.0.0.1
 name_servers=192.168.1.10
 EOF
