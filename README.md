@@ -299,7 +299,7 @@ ansible_port=2026
 EOF
 ```
 ```bash
-nano /etc/ansible/ansible.cfg
+mcedit /etc/ansible/ansible.cfg
 ```
 ```bash
 [defaults]
