@@ -21,7 +21,7 @@ useradd -u 2026 -G wheel sshuser -p P@ssw0rd
 
 echo "sshuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-cat > /etc/openssh/sshd_config << EOF
+cat >> /etc/openssh/sshd_config << EOF
 Port 2026
 MaxAuthTries 2
 PasswordAuthentication yes
