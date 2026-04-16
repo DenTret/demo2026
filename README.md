@@ -310,7 +310,7 @@ interpreter_python = /usr/bin/python3
 # uncomment this to disable SSH key host checking
 host_key_checking = False
 ```
-> [!WARNING}
+> [!WARNING]
 > Перед вводом команды пропингуйте br-rtr.au-team.irpo, если пинг идёт на IPv6, то сначала пропишите в /etc/hosts строку:
 > 192.168.3.1	br-rtr.au-team.irpo	br-rtr
 ```bash
