@@ -294,7 +294,7 @@ hq-srv.au-team.irpo ansible_ssh_user=sshuser ansible_ssh_pass=P@ssw0rd
 hq-cli.au-team.irpo ansible_ssh_user=sysadmin ansible_ssh_pass=P@ssw0rd
 br-rtr.au-team.irpo ansible_ssh_user=net_admin ansible_ssh_pass=P@ssw0rd
 
-[Alt:vars]
+[all:vars]
 ansible_port=2026
 EOF
 ```
