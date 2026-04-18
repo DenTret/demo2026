@@ -1,0 +1,301 @@
+Задание 1: импорт пользователей BR-SRV
+apt-get update && apt-get install -y dos2unix curl
+mount /dev/sr0 /mnt
+cp /mnt/Users.csv /opt/
+curl -o /opt/import_users.sh https://raw.githubusercontent.com/shiraorie/demo2026-1/main/files/import_users.sh
+ls /opt
+dos2unix /opt/import_users.sh
+chmod +x /opt/import_users.sh
+/opt/import_users.sh
+
+Задание 2: настройка центра сертификации HQ-SRV
+HQ-SRV
+apt-get update && apt-get install -y openssl ca-certificates
+mkdir -p /etc/pki/CA/{private,certs,newcerts,crl}
+touch /etc/pki/CA/index.txt
+echo 1000 > /etc/pki/CA/serial
+chmod 777 /etc/pki/CA/private
+openssl req -x509 -new -nodes \
+keyout /etc/pki/CA/private/ca.key \
+out /etc/pki/CA/certs/ca.crt \
+days 3650 \
+sha256 \
+subj "/CN=AU-TEAM Root CA"
+openssl genrsa -out /etc/pki/CA/private/web.au-team.irpo.key 2048
+openssl req -new \
+-key /etc/pki/CA/private/web.au-team.irpo.key \
+-out /etc/pki/CA/web.au-team.irpo.csr \
+-subj "/CN=web.au-team.irpo"
+openssl genrsa -out /etc/pki/CA/private/docker.au-team.irpo.key 2048
+openssl req -new \
+-key /etc/pki/CA/private/docker.au-team.irpo.key \
+-out /etc/pki/CA/docker.au-team.irpo.csr \
+-subj "/CN=docker.au-team.irpo"
+mkdir -p /etc/ssl/
+curl -o /etc/ssl/openssl-ca.cnf https://raw.githubusercontent.com/shiraorie/demo2026-1/main/files/openssl-gost.cnf
+openssl ca \
+-config /etc/ssl/openssl-ca.cnf \
+-in /etc/pki/CA/web.au-team.irpo.csr \
+-out /etc/pki/CA/certs/web.au-team.irpo.crt \
+-extensions server_cert \
+-days 30 \
+-batch
+openssl ca \
+-config /etc/ssl/openssl-ca.cnf \
+-in /etc/pki/CA/docker.au-team.irpo.csr \
+-out /etc/pki/CA/certs/docker.au-team.irpo.crt \
+-extensions server_cert \
+-days 30 \
+-batch
+cp /etc/pki/CA/certs/ca.crt /raid0/nfs/
+HQ-CLI
+cp /mnt/nfs/ca.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust
+ISP
+apt-get update && apt-get install -y curl
+curl -o /etc/nginx/sites-available.d/default.conf https://raw.githubusercontent.com/shiraorie/demo2026-1/main/files/reverse-proxy-ssl.conf
+mcedit /etc/nginx/sites-available.d/default.conf #Изменяем ip 172.16.1.10 172.16.2.10
+mkdir -p /etc/nginx/ssl
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/certs/web.au-team.irpo.crt /etc/nginx/ssl/
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/private/web.au-team.irpo.key /etc/nginx/ssl/
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/certs/web.au-team.irpo.crt /etc/nginx/ssl/
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/private/web.au-team.irpo.key /etc/nginx/ssl/
+chown root:root /etc/nginx/ssl/*
+chmod 600 /etc/nginx/ssl/*.key
+nginx -t
+systemctl restart nginx
+
+Задание 3: настройка ip-туннеля 
+HQ-RTR
+apt-get update && apt-get install -y strongswan
+mcedit /etc/strongswan/ipsec.conf
+config setup
+    uniqueids = yes
+    charondebug="ike 2, knl 2, cfg 2, mgr 2, chd 2"
+conn br-rtr.au-team.irpo
+    type=transport
+    left=172.16.1.10
+    leftid=172.16.1.10
+    right=172.16.2.10
+    rightid=172.16.2.10
+    authby=secret
+    ike=aes256-sha256-modp2048!
+    esp=aes256-sha256!
+    keyexchange=ikev2
+    ikelifetime=24h
+    lifetime=8h
+    dpddelay=30
+    dpdtimeout=120
+    dpdaction=restart
+    auto=start
+mcedit /etc/strongswan/ipsec.secrets
+172.16.1.10 172.16.2.10 : PSK "123qweR%"
+systemctl start ipsec
+systemctl enable --now strongswan-starter
+BR-RTR
+apt-get update && apt-get install -y strongswan
+mcedit /etc/strongswan/ipsec.conf
+config setup
+    uniqueids = yes
+    charondebug="ike 2, knl 2, cfg 2, mgr 2, chd 2"
+conn hq-rtr.au-team.irpo
+    type=transport
+    left=172.16.2.10
+    leftid=172.16.2.10
+    right=172.16.1.10
+    rightid=172.16.1.10
+    authby=secret
+    ike=aes256-sha256-modp2048!
+    esp=aes256-sha256!
+    keyexchange=ikev2
+    ikelifetime=24h
+    lifetime=8h
+    dpddelay=30
+    dpdtimeout=120
+    dpdaction=restart
+    auto=start
+mcedit /etc/strongswan/ipsec.secrets
+172.16.2.10 172.16.1.10 : PSK "123qweR%"
+systemctl start ipsec
+systemctl enable --now strongswan-starter
+Проверка
+BR-RTR
+apt-get install -y tcpdump
+tcpdump -i enp7s1 -n esp
+HQ-RTR
+ping 172.16.2.10
+
+Задание 4: настройка межсетевого экрана
+HQ-RTR
+apt-get install -y curl dos2unix
+curl -o /etc/nftables.conf https://raw.githubusercontent.com/shiraorie/demo2026-1/main/files/hq-rtr/nftables.conf
+dos2unix /etc/nftables.conf
+mcedit /etc/nftables #меняем маску и ip адрес в соответствии с заданием 172.16.1.10-192.168.1.10 192.168.1.0-192.168.2.0
+ipsec status
+BR-RTR
+apt-get install -y curl dos2unix
+curl -o /etc/nftables.conf https://raw.githubusercontent.com/shiraorie/demo2026-1/main/files/hq-rtr/nftables.conf
+dos2unix /etc/nftables.conf
+mcedit /etc/nftables #меняем маску и ip адрес в соответствии с заданием 172.16.2.10-192.168.3.10; 192.168.3.0
+IPsec status
+
+Задание 5
+HQ-SRV 
+apt-get install -y cups cups-pdf
+systemctl enable --now cups
+cupsctl --share-printers --remote-any
+systemctl restart cups
+HQ-CLI
+apt-get install -y cups system-config-printer
+nano /etc/hosts
+192.168.1.10 hq-srv.au-team.irpo hq-srv
+Открываем пуск и пишем Настройка принтеров (синий значок)
+Жмём добавить и в строке URL вводим http://192.168.1.10:631/printers/PDF
+Жмём далее и снова далее, находим драйвер Generic CUPS-PDF
+Снова жмём далее и применяем настройки
+появиться уведомление о печати
+задание выполнено
+
+Задание 6
+HQ-SRV
+apt-get update && apt-get install -y rsyslog
+mcedit /etc/rsyslog.d/00_common
+#Расскоментируем модули imuxsock и imklog, а также модуль imtcp
+$template RemoteLogs, "/opt/%HOSTNAME%/rsyslog.txt"
+*.* ?RemoteLogs
+& stop
+systemctl enable --now rsyslog
+systemctl start rsyslog
+systemctl restart rsyslog
+HQ-RTR, BR-RTR
+apt-get update && apt-get install -y rsyslog
+mcedit /etc/rsyslog.d/00_common
+#Расскоментируем все 4 модуля
+*.* @@hq-srv.au-team.irpo:514
+*.warning @@192.168.1.10:514
+systemctl enable --now rsyslog
+systemctl start rsyslog
+systemctl restart rsyslog
+BR-SRV
+apt-get update && apt-get install -y rsyslog
+mcedit /etc/rsyslog.d/00_common
+#Расскоментируем все 4 модуля
+*.warning @@192.168.1.10:514
+systemctl enable --now rsyslog
+systemctl start rsyslog
+systemctl restart rsyslog
+Проверка
+BR-SRV
+logger -p user.info “Test info”
+logger -p user.warning “Test warning”
+logger -p user.error “Test error”
+HQ-SRV
+cat /opt/br-srv/rsyslog.txt
+Настройка ротации логов
+mcedit /etc/logrotate.d/rsyslog
+/var/log/syslog
+/var/log/mail.log
+/var/log/kern.log
+/var/log/auth.log
+/var/log/user.log
+/var/log/cron.log
+{
+	rotate 4
+	weekly
+	missingok
+	notifempty
+	compress
+	delaycompress
+	sharedscripts
+	postrotate
+		/usr/lib/rsyslog/rsyslog-rotate
+	endscript
+}
+/opt/*/rsyslog.txt {
+	weekly
+	minsize 10M
+	compress
+	missingok
+	notifempty
+	create 0644 root root
+	rotate 4
+}
+
+Задание 7
+HQ-SRV
+apt-get update && apt-get install -y postgresql17-server zabbix-server-pgsql fping
+/etc/init.d/postgresql initdb
+systemctl enable --now postgresql
+su - postgres -s /bin/sh -c 'createuser --no-superuser --no-createdb --no-createrole --encrypted --pwprompt zabbix'
+su - postgres -s /bin/sh -c 'createdb -O zabbix zabbix'
+rpm -ql zabbix-common-database-pgsql | grep schema.sql # Заменить * на результат
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/schema.sql zabbix'
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/images.sql zabbix'
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/data.sql zabbix'
+apt-get install apache2 apache2-mod_php8.2
+systemctl enable --now httpd2
+apt-get install php8.2 php8.2-mbstring php8.2-sockets php8.2-gd php8.2-xmlreader php8.2-pgsql php8.2-ldap php8.2-openssl
+mcedit /etc/php/8.4/apache2-mod_php/php.ini
+memory_limit = 256M
+post_max_size = 32M
+max_execution_time = 600
+max_input_time = 600
+date.timezone = Asia/Yekaterinburg
+always_populate_raw_post_data = -1
+systemctl restart httpd2
+mcedit /etc/zabbix/zabbix_server.conf
+DBHost=localhost
+DBName=zabbix
+DBUser=zabbix
+DBPassword=P@ssw0rd
+systemctl enable --now zabbix_pgsql
+apt-get install zabbix-phpfrontend-apache2 zabbix-phpfrontend-php8.2
+ln -s /etc/httpd2/conf/addon.d/A.zabbix.conf /etc/httpd2/conf/extra-enabled/
+service httpd2 restart
+chown apache2:apache2 /var/www/webapps/zabbix/ui/conf
+В браузере перейти на страницу установки Zabbix сервера:
+http://<ip-сервера>/zabbix 
+Войдя в систему, нужно сменить пароль пользователя (Administration ⇾ Users), завести других пользователей и можно начать настраивать Zabbix. 
+HQ-SRV
+apt-get update && apt-get install zabbix-agent
+mcedit /etc/zabbix/zabbix_agentd.conf 
+Server=127.0.0.1
+ServerActive=127.0.0.1
+Hostname=zabbix_server
+systemctl enable --now zabbix_agentd.service
+HQ-RTR, BR-RTR, BR-SRV
+apt-get update && apt-get install zabbix-agent
+mcedit /etc/zabbix/zabbix_agentd.conf 
+Server=192.168.1.10
+ServerActive=192.168.1.10
+#Hostname=
+systemctl enable --now zabbix_agentd.service
+После настройки возвращаемся в веб-интерфейс Zabbix и жмём кнопку "Создать узел"
+В появившемся окне добавляем следующие настройки:
+Имя узла: <имя_машины>
+Шаблоны: <Нажимаем кнопку выбрать, ввыбираем раздел operating system и в нем выбираем пункт Linux by Zabbix agent
+Группы узлов: Zabbix server или Linux Server
+Интерфейс: <ip-адрес машины>
+
+Задание 8
+BR-SRV
+mkdir /etc/ansible/PC_INFO
+apt-get update && apt-get install -y dos2unix curl
+curl -o /etc/ansible/inventory.yml https://raw.githubusercontent.com/shiraorie/demo2026-1/main/files/inventory.yml
+dos2unix /etc/ansible/inventory.yml
+Проверка:
+ansible-playbook /etc/ansible/inventory.yml
+cd /etc/ansible/PC_INFO
+
+Задание 9
+BR-SRV
+mkdir /etc/ansible/NETWORK_INFO
+curl -o /etc/ansible/backup.yml https://raw.githubusercontent.com/shiraorie/demo2026-1/main/files/backup.yml
+HQ-RTR, BR-RTR
+apt-get update && apt-get install -y sudo
+Проверка
+ansible-playbook /etc/ansible/backup.yml
+ls -la /etc/ansible/NETWORK_INFO
+ls -la /etc/ansible/NETWORK_INFO/HQ-RTR
+ls -la /etc/ansible/NETWORK_INFO/BR-RTR
+cat /etc/ansible/NETWORK_INFO/HQ-RTR/interfaces
