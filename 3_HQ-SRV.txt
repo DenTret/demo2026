@@ -1,4 +1,5 @@
 hostnamectl set-hostname hq-srv.au-team.irpo; exec bash
+
 cat > /etc/net/ifaces/ens18/options << EOF 
 BOOTPROTO=static
 TYPE=eth
