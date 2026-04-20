@@ -53,7 +53,7 @@ address=/hq-rtr.au-team.irpo/192.168.100.1
 address=/hq-srv.au-team.irpo/192.168.100.30
 address=/hq-cli.au-team.irpo/192.168.200.2
 address=/br-rtr.au-team.irpo/192.168.0.1
-address=/hq-srv.au-team.irpo/192.168.0.14
+address=/br-srv.au-team.irpo/192.168.0.14
 EOF
 
 systemctl restart dnsmasq
