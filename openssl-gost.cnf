@@ -1,0 +1,39 @@
+[ ca ]
+default_ca = CA_default
+
+[ CA_default ]
+dir             = /etc/pki/CA
+certs           = $dir/certs
+crl_dir         = $dir/crl
+new_certs_dir   = $dir/newcerts
+database        = $dir/index.txt
+serial          = $dir/serial
+RANDFILE        = $dir/private/.rand
+
+certificate     = $dir/certs/ca.crt
+private_key     = $dir/private/ca.key
+default_days    = 30
+default_md      = sha256
+preserve        = no
+policy          = policy_anything
+
+[ policy_anything ]
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ server_cert ]
+basicConstraints        = CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer
+keyUsage                = critical, digitalSignature, keyEncipherment
+extendedKeyUsage        = serverAuth
+subjectAltName          = @alt_names
+
+[ alt_names ]
+DNS.1 = web.au-team.irpo
+DNS.2 = docker.au-team.irpo
