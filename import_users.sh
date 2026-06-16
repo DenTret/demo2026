@@ -24,9 +24,9 @@ while IFS=';' read -r fname lname role phone ou street zip city country password
 
     # Add user
     echo "Adding user: $username in OU=$ou"
-    sudo samba-tool user add "$username" "$password" --given-name="$fname" --surname="$lname" \
+    sudo samba-tool user add "$username" P@ssw0rd1 --given-name="$fname" --surname="$lname" \
       --job-title="$role" --telephone-number="$phone" \
       --userou="OU=$ou"
-done < "$CSV_FILE"
 
+done < "$CSV_FILE"
 echo "✅ All users added!"
