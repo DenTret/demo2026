@@ -1,0 +1,74 @@
+## Задание 2: настройка центра сертификации HQ-SRV
+**HQ-SRV**
+
+apt-get update && apt-get install -y openssl ca-certificates
+mkdir -p /etc/pki/CA/{private,certs,newcerts,crl}
+touch /etc/pki/CA/index.txt
+echo 1000 > /etc/pki/CA/serial
+chmod 777 /etc/pki/CA/private
+
+openssl req -x509 -new -nodes \
+-keyout /etc/pki/CA/private/ca.key \
+-out /etc/pki/CA/certs/ca.crt \
+-days 3650 \
+-sha256 \
+-subj "/CN=AU-TEAM Root CA"
+
+openssl genrsa -out /etc/pki/CA/private/web.au-team.irpo.key 2048
+
+openssl req -new \
+-key /etc/pki/CA/private/web.au-team.irpo.key \
+-out /etc/pki/CA/web.au-team.irpo.csr \
+-subj "/CN=web.au-team.irpo"
+
+openssl genrsa -out /etc/pki/CA/private/docker.au-team.irpo.key 2048
+
+openssl req -new \
+-key /etc/pki/CA/private/docker.au-team.irpo.key \
+-out /etc/pki/CA/docker.au-team.irpo.csr \
+-subj "/CN=docker.au-team.irpo"
+
+mkdir -p /etc/ssl/
+curl -o /etc/ssl/openssl-ca.cnf https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/openssl-gost.cnf
+
+openssl ca \
+-config /etc/ssl/openssl-ca.cnf \
+-in /etc/pki/CA/web.au-team.irpo.csr \
+-out /etc/pki/CA/certs/web.au-team.irpo.crt \
+-extensions server_cert \
+-days 30 \
+-batch
+
+openssl ca \
+-config /etc/ssl/openssl-ca.cnf \
+-in /etc/pki/CA/docker.au-team.irpo.csr \
+-out /etc/pki/CA/certs/docker.au-team.irpo.crt \
+-extensions server_cert \
+-days 30 \
+-batch
+
+cp /etc/pki/CA/certs/ca.crt /raid0/nfs/
+
+**HQ-CLI**
+
+cp /mnt/nfs/ca.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust
+
+**ISP**
+
+apt-get update && apt-get install -y curl
+curl -o /etc/nginx/sites-available.d/default.conf https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/reverse-proxy-ssl.conf
+mkdir -p /etc/nginx/ssl
+
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/certs/web.au-team.irpo.crt /etc/nginx/ssl/
+
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/private/web.au-team.irpo.key /etc/nginx/ssl/
+
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/certs/docker.au-team.irpo.crt /etc/nginx/ssl/
+
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/private/docker.au-team.irpo.key /etc/nginx/ssl/
+
+chown root:root /etc/nginx/ssl/*
+chmod 600 /etc/nginx/ssl/*.key
+nginx -t
+systemctl restart nginx
